@@ -120,15 +120,3 @@ All endpoints accept optional query params: `?edu=Graduation&kid=0`
 | API | REST JSON endpoints |
 
 ---
-
-## Pushing to GitHub
-
-```bash
-git init
-git add .
-git commit -m "Initial commit — CampaignIQ dashboard"
-git remote add origin https://github.com/<your-username>/CampaignIQ.git
-git push -u origin main
-```
-
-> Add `backend/data/` to `.gitignore` so the CSV is not committed.
