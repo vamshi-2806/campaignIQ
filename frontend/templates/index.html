@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CampaignIQ — Marketing Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="stylesheet" href="/static/css/style.css"/>
+</head>
+<body>
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">CampaignIQ</div>
+      <div class="logo-sub">Analytics Platform</div>
+    </div>
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active"><span class="nav-dot"></span>Dashboard</div>
+    <div class="sidebar-footer">
+      <div class="footer-label">Data Source</div>
+      <a class="src-link" href="https://www.kaggle.com/datasets/rodsaldanha/arketing-campaign" target="_blank">
+        Kaggle — Marketing Campaign
+      </a>
+      <div id="ds-info" class="ds-info">Loading…</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title">Customer Campaign Analytics</div>
+        <div class="topbar-meta" id="topbar-meta">Connecting to Flask API…</div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-theme" onclick="toggleTheme()" id="theme-btn">☀️ Light Mode</button>
+        <button class="btn" onclick="exportCSV()">↓ Export CSV</button>
+        <button class="btn btn-accent" onclick="resetFilters()">↺ Reset</button>
+      </div>
+    </div>
+
+    <!-- LOADING OVERLAY -->
+    <div id="loader">
+      <div class="spinner"></div>
+      <div class="loader-text" id="loader-text">Loading dataset from Python backend…</div>
+    </div>
+
+    <!-- ERROR STATE -->
+    <div id="error-state" style="display:none">
+      <div class="error-box">
+        <div class="error-title">⚠ Backend not running</div>
+        <div class="error-msg">Start the Flask server first:</div>
+        <pre class="error-code">python backend/app.py</pre>
+        <div class="error-msg" style="margin-top:8px">Then refresh this page.</div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" style="display:none">
+      <div class="content">
+
+        <!-- FILTERS -->
+        <div class="filter-bar">
+          <span class="filter-label">Education:</span>
+          <div id="edu-filters" class="filter-group">
+            <div class="filter-chip active" onclick="setEdu(this,'All')">All</div>
+          </div>
+          <span class="filter-label" style="margin-left:14px">Kids at home:</span>
+          <div class="filter-group">
+            <div class="filter-chip active" onclick="setKid(this,'All')">All</div>
+            <div class="filter-chip" onclick="setKid(this,'0')">No kids</div>
+            <div class="filter-chip" onclick="setKid(this,'1+')">Has kids</div>
+          </div>
+        </div>
+
+        <!-- KPIs -->
+        <div class="kpi-grid">
+          <div class="kpi-card c1">
+            <div class="kpi-label">Total Customers</div>
+            <div class="kpi-val c1" id="k-total">—</div>
+            <div class="kpi-sub" id="k-total-sub"></div>
+          </div>
+          <div class="kpi-card c2">
+            <div class="kpi-label">Response Rate</div>
+            <div class="kpi-val c2" id="k-resp">—</div>
+            <div class="kpi-sub" id="k-resp-sub">Last campaign</div>
+          </div>
+          <div class="kpi-card c3">
+            <div class="kpi-label">Avg. Income</div>
+            <div class="kpi-val c3" id="k-income">—</div>
+            <div class="kpi-sub">Selected segment</div>
+          </div>
+          <div class="kpi-card c4">
+            <div class="kpi-label">Avg. Total Spend</div>
+            <div class="kpi-val c4" id="k-spend">—</div>
+            <div class="kpi-sub">All product categories</div>
+          </div>
+        </div>
+
+        <!-- ROW 1 -->
+        <div class="charts-row">
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Campaign Acceptance Rates</div>
+                <div class="chart-sub">% of customers who accepted each of the 6 campaign offers</div>
+              </div>
+            </div>
+            <canvas id="cmpBar"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Purchase Channel Mix</div>
+                <div class="chart-sub">Total purchases: Web vs Store vs Catalog</div>
+              </div>
+            </div>
+            <canvas id="chanDonut"></canvas>
+          </div>
+        </div>
+
+        <!-- ROW 2 -->
+        <div class="bottom-row">
+          <div class="table-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Conversion Funnel</div>
+                <div class="chart-sub">Reach → Engagement → Purchase → Conversion</div>
+              </div>
+            </div>
+            <div class="funnel-wrap" id="funnel"></div>
+          </div>
+          <div class="table-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Avg. Spend by Category (€)</div>
+                <div class="chart-sub">Mean per customer across product categories</div>
+              </div>
+            </div>
+            <canvas id="spendBar"></canvas>
+          </div>
+        </div>
+
+        <!-- ROW 3 -->
+        <div class="third-row">
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Response Rate by Education</div>
+                <div class="chart-sub">Last campaign conversion per segment</div>
+              </div>
+            </div>
+            <canvas id="eduChart"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Income Distribution</div>
+                <div class="chart-sub">Number of customers per income band</div>
+              </div>
+            </div>
+            <canvas id="incomeChart"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Top 10 Customers by Spend</div>
+                <div class="chart-sub">Highest value customers (€)</div>
+              </div>
+            </div>
+            <canvas id="topSpend"></canvas>
+          </div>
+        </div>
+
+      </div><!-- .content -->
+    </div><!-- #dashboard -->
+  </div><!-- .main -->
+</div><!-- .shell -->
+
+<script src="/static/js/main.js"></script>
+</body>
+</html>
